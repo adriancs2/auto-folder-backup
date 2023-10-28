@@ -406,6 +406,11 @@ namespace System
         {
             this.WindowState = FormWindowState.Minimized;
         }
+
+        private void btClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
     }
 
     public class Settings

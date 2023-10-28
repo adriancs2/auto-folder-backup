@@ -349,6 +349,7 @@
             this.btClose.TabIndex = 26;
             this.btClose.Text = "X";
             this.btClose.UseVisualStyleBackColor = false;
+            this.btClose.Click += new System.EventHandler(this.btClose_Click);
             // 
             // lbFormTitle
             // 
