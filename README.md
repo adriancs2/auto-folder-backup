@@ -2,9 +2,11 @@
 
 ![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot02.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot02.png)
 
-Download the program at the "Release" section at the right side of this page.
+Download the program at the "![Release](https://github.com/adriancs2/auto-folder-backup/releases)" section at the right side of this page.
 
 To begin with, please run "Setup.exe" for setting up the parameters, or else the program will do nothing until the required parameters are set.
+
+Then, to avoid accidentally human error for modifying the setup parameters, rename "Setup.exe" to "Setup", or remove the file "Setup.exe".
 
 ## Features
 
