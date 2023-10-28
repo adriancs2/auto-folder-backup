@@ -83,6 +83,6 @@ Example of Main Log
 - Run with highest privileges
 - Set a trigger with your preferred execution time (i.e. 3am)
 
-Questino: What if I need to backup multiple folders that I can't put them within a single folder to begin with?
+Question: What if I need to back up multiple folders and can't place them within a single folder to begin with?
 
-Answer: you can copy "Auto Folder Backup" to multiple folders and setup the parameters individually, then create multiple Task Schedulers for each target folder.
+Answer: You can copy "Auto Folder Backup" to multiple folders and set up the parameters individually. Then, create multiple Task Schedulers for each target folder. Ensure that the triggers for these task schedulers do not overlap with each other. Otherwise, the computer may experience significant performance issues if backup tasks for different target folders run simultaneously.
