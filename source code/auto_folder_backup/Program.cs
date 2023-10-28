@@ -279,7 +279,7 @@ Total Skipped = {TotalSkipped}";
             // No folder, means no backup is ever executed.
             if (dicFolderDate.Count == 0)
             {
-                // Begin the backup from the first drive
+                // Begin full backup, save to the first drive
                 WriteLog("Executing full backup");
                 return $"{lstMyDrive[0]}:\\{timeNowStr}";
             }
@@ -302,7 +302,7 @@ Total Skipped = {TotalSkipped}";
 
             if (latestBackupDate == DateTime.MinValue)
             {
-                // Begin the backup from the first drive
+                // Begin full backup, save to the first drive
                 WriteLog("Executing full backup");
                 return $"{lstMyDrive[0]}:\\{timeNowStr}";
             }
@@ -313,7 +313,7 @@ Total Skipped = {TotalSkipped}";
 
             WriteLog($"Total days for full backup: {config.TotalDaysForFullBackup}, Days since last backup: {timespanTotalDaysOld.TotalDays.ToString("0.0")}");
 
-            if (timespanTotalDaysOld.TotalDays > (double)config.TotalDaysForFullBackup)
+            if (timespanTotalDaysOld.TotalDays >= (double)config.TotalDaysForFullBackup)
             {
                 // Perform a full backup
 
@@ -326,7 +326,7 @@ Total Skipped = {TotalSkipped}";
                 // Format the drive, a quick way to erase all files
                 if (requireFormat)
                 {
-                    WriteLog("Disk drive fulled, doing format on next drive");
+                    WriteLog("Disk drive fulled, switching to next drive with older version of backup");
                     FormatDrive(newTargetedDriveLetter);
                 }
 
@@ -415,7 +415,7 @@ Total Skipped = {TotalSkipped}";
                 Environment.Exit(0);
             }
 
-            WriteLog($"Begin formatting drive {driveLetter}");
+            WriteLog($"Begin formatting drive {driveLetter}:\\, for quickly erasing all files");
 
             try
             {

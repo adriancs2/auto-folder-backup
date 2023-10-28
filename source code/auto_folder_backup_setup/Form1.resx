@@ -118,14 +118,11 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="label5.Text" xml:space="preserve">
-    <value>* warning! selected drives will be formatted. select the drive carefully.
-* select 2 or more drives
-* drive C and D are not allowed
+    <value>limitations:
+- this program is designed to backup a single folder (included sub-folders within)
+- requires task scheduler to run the backup automatically
 
-
-limitations:
-- this program only provides the backup operation without the scheduler
-- requires manually create a daily task scheduler to run the backup
+for manual task scheduler setup:
 - set the task scheduler to run [auto_folder_backup.exe]
 - run the task scheduler with administrative user or System
 - run it whether user is logged on or not

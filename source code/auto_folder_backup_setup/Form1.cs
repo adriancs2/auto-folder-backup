@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
+using Microsoft.Win32.TaskScheduler;
 
 
 namespace System
@@ -37,6 +38,26 @@ namespace System
 
         void LoadSettings()
         {
+            using (TaskService ts = new TaskService())
+            {
+                // Check if the task already exists
+                var existingTask = ts.GetTask("Auto Folder Backup");
+                if (existingTask != null)
+                {
+                    var triggerTime = existingTask.Definition.Triggers[0].StartBoundary;
+                    lbTaskSchedulerStatus.Text = $"installed ({(existingTask.Enabled ? "enabled" : "disabled")})";
+                    nmTaskHour.Value = triggerTime.Hour;
+                    nmTaskMinute.Value = triggerTime.Minute;
+                }
+                else
+                {
+                    lbTaskSchedulerStatus.Text = "none - not installed yet";
+                    nmTaskHour.Value = 3;
+                    nmTaskMinute.Value = 0;
+                }
+            }
+
+
             DriveInfo[] allDrives = DriveInfo.GetDrives();
 
             foreach (DriveInfo drive in allDrives)
@@ -290,6 +311,100 @@ namespace System
         private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             MessageBox.Show("The backup process has ended. You may [open log file] for the work result status (either success or fail).");
+        }
+
+        private void btDeleteTaskScheduler_Click(object sender, EventArgs e)
+        {
+            // Get the service on the local machine
+            using (TaskService ts = new TaskService())
+            {
+                // Remove the task we created
+                ts.RootFolder.DeleteTask("Auto Folder Backup");
+            }
+
+            LoadSettings();
+
+            MessageBox.Show("Task Scheduler deleted");
+        }
+
+        private void btCreateTaskScheduler_Click(object sender, EventArgs e)
+        {
+            // Get the service on the local machine
+            using (TaskService ts = new TaskService())
+            {
+                // Check if the task already exists
+                var existingTask = ts.GetTask("Auto Folder Backup");
+                if (existingTask != null)
+                {
+                    var sb = existingTask.Definition.Triggers[0].StartBoundary;
+                    MessageBox.Show($"The task 'Auto Folder Backup' already exists\r\n\r\nExecution Time: {sb.ToString("HH:mm")}.\r\n\r\nPlease delete it first before attempting to create it again.", "Task Exists", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // Create a new task definition and assign properties
+                TaskDefinition td = ts.NewTask();
+                td.RegistrationInfo.Description = "Automated folder backup task";
+                td.Principal.RunLevel = TaskRunLevel.Highest;  // Run with the highest privileges
+
+                // Create a trigger that will fire every day at 3AM
+                DateTime triggertime = DateTime.Today.AddHours((int)nmTaskHour.Value).AddMinutes((int)nmTaskMinute.Value);
+                td.Triggers.Add(new DailyTrigger { StartBoundary = triggertime });
+
+                // Create an action that will launch the program whenever the trigger fires
+                td.Actions.Add(new ExecAction(@"D:\auto_folder_backup\auto_folder_backup.exe", null, null));
+
+                // Register the task in the root folder
+                ts.RootFolder.RegisterTaskDefinition(@"Auto Folder Backup", td,
+                    TaskCreation.CreateOrUpdate,
+                    "SYSTEM",   // Specify the "SYSTEM" user (or an administrator username)
+                    null,       // No password is needed when using the SYSTEM user
+                    TaskLogonType.ServiceAccount,
+                    null);      // No SDDL-defined security descriptor needed
+            }
+
+            LoadSettings();
+
+            MessageBox.Show("Done");
+        }
+
+        bool beginMoveForm = false;
+        Point startMousePosition;
+        Point oriFormPosition;
+
+        private void lbFormTitle_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                beginMoveForm = true;
+                startMousePosition = Control.MousePosition;  // Store the mouse position on screen at the time of the mouse down event
+                oriFormPosition = this.Location;  // Store the original form position
+            }
+        }
+
+        private void lbFormTitle_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (beginMoveForm)
+            {
+                // Get the current mouse position on screen
+                Point currentMousePosition = Control.MousePosition;
+
+                // Calculate how much the mouse has moved
+                int deltaX = currentMousePosition.X - startMousePosition.X;
+                int deltaY = currentMousePosition.Y - startMousePosition.Y;
+
+                // Compute the new form position
+                this.Location = new Point(oriFormPosition.X + deltaX, oriFormPosition.Y + deltaY);
+            }
+        }
+
+        private void lbFormTitle_MouseUp(object sender, MouseEventArgs e)
+        {
+            beginMoveForm = false;  // Stop moving the form when the mouse button is released
+        }
+
+        private void btMinimize_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Minimized;
         }
     }
 
