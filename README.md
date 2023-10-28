@@ -1,10 +1,12 @@
-# Auto Files Backup for File Server of a Small Office
+# Automatic Folder Backup for File Server (Windows) for Small Office
 
 ![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot02.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot02.png)
 
-Download the program at the "Release" section at the right side of this page.
+Download the program at the "[Release](https://github.com/adriancs2/auto-folder-backup/releases)" section at the right side of this page.
 
 To begin with, please run "Setup.exe" for setting up the parameters, or else the program will do nothing until the required parameters are set.
+
+Then, to avoid accidentally human error for modifying the setup parameters, rename "Setup.exe" to "Setup", or remove the file "Setup.exe".
 
 ## Features
 
@@ -80,3 +82,7 @@ Example of Main Log
 - Run it whether user is logged on or not
 - Run with highest privileges
 - Set a trigger with your preferred execution time (i.e. 3am)
+
+Question: What if I need to back up multiple folders and can't place them within a single folder to begin with?
+
+Answer: You can copy "Auto Folder Backup" to multiple folders and set up the parameters individually. Then, create multiple Task Schedulers for each target folder. Ensure that the triggers for these task schedulers do not overlap with each other. Otherwise, the computer may experience significant performance issues if backup tasks for different target folders run simultaneously.
