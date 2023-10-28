@@ -82,3 +82,7 @@ Example of Main Log
 - Run it whether user is logged on or not
 - Run with highest privileges
 - Set a trigger with your preferred execution time (i.e. 3am)
+
+Questino: What if I need to backup multiple folders that I can't put them within a single folder to begin with?
+
+Answer: you can copy "Auto Folder Backup" to multiple folders and setup the parameters individually, then create multiple Task Schedulers for each target folder.
