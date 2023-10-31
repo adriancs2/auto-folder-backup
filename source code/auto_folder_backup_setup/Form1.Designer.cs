@@ -360,7 +360,7 @@
             this.lbFormTitle.Padding = new System.Windows.Forms.Padding(6, 8, 0, 0);
             this.lbFormTitle.Size = new System.Drawing.Size(812, 30);
             this.lbFormTitle.TabIndex = 28;
-            this.lbFormTitle.Text = "Auto Folder Backup (beta 0.2)";
+            this.lbFormTitle.Text = "Auto Folder Backup (beta 0.3)";
             this.lbFormTitle.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lbFormTitle_MouseDown);
             this.lbFormTitle.MouseMove += new System.Windows.Forms.MouseEventHandler(this.lbFormTitle_MouseMove);
             this.lbFormTitle.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lbFormTitle_MouseUp);
@@ -431,7 +431,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Setup - Simple Auto Folder Backup - beta 0.1";
+            this.Text = "Auto Folder Backup (beta 0.3)";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nmTotalDays)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nmTaskHour)).EndInit();

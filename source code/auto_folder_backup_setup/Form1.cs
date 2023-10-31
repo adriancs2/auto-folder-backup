@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Diagnostics;
 using Microsoft.Win32.TaskScheduler;
+using System.Text.RegularExpressions;
 
 
 namespace System
@@ -57,6 +58,7 @@ namespace System
                 }
             }
 
+            flowLayoutPanel1.Controls.Clear();
 
             DriveInfo[] allDrives = DriveInfo.GetDrives();
 
@@ -84,11 +86,6 @@ namespace System
                 nmTotalDays.Value = settings.TotalDaysForFullBackup;
 
                 string[] myDrives = settings.BackupDriveLetters.Split(new char[] { ',', '|' }, StringSplitOptions.RemoveEmptyEntries);
-
-                foreach (var c in flowLayoutPanel1.Controls)
-                {
-                    ((CheckBox)c).Checked = false;
-                }
 
                 foreach (var drive in myDrives)
                 {
@@ -318,8 +315,14 @@ namespace System
             // Get the service on the local machine
             using (TaskService ts = new TaskService())
             {
-                // Remove the task we created
-                ts.RootFolder.DeleteTask("Auto Folder Backup");
+                // Get the tasks that match the regex
+                var tasks = ts.RootFolder.GetTasks(new Regex("Auto Folder Backup"));
+
+                // Delete the tasks
+                foreach (var task in tasks)
+                {
+                    ts.RootFolder.DeleteTask(task.Name);
+                }
             }
 
             LoadSettings();
