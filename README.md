@@ -30,6 +30,28 @@ Assume that you set the "Total Days For Full Backup" as 7 days. For every interv
 
 Now this is for the full backup. For every other day, the program will perform incremental backup in the latest created destination folder among the drives. It will compare all the files, if the file from the target folder is newer than the destination folder, the file will be overwritten by the newer file.
 
+The following images illusstrate the file backup strategy used by this software:
+
+This image shows the initial setup:
+
+- First hard disk used for running Windows `(Drive C)`.
+- Second hard disk will be used as the main file server storage `(Drive D)`.
+- Third and forth hard disk (or a thrid hard disk partitioned into 2 drives) will be dedicated for backup `(Drive E, F)`.
+
+![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-01.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-01.png)
+
+Below image shows the software started to run the backup. In this example, the program is set to perform a full backup on every interval of 7 days. Other days will be performing incremental backup.
+
+![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-01.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-02.png)
+
+Next, the image shows the first backup drive is full. The program will switch to the next backup drive.
+
+![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-01.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-03.png)
+
+and lastly, when the next drive is full, the program will go back to the first backup drive. Since the first backup drive has already full, the program will format the drive and start using it for the backup.
+
+![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-01.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/disk-map-04.png)
+
 There are two types of log file will be created along side with the backup operation. The "Main Log" and the "Files Backup Log".
 
 **Main Log**
