@@ -2,6 +2,8 @@
 
 ![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot03.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot03.png)
 
+Writing a Simple C# Files Backup Solution for File Server: [adriancs.com](Writing a Simple C# Files Backup Solution for File Server) | [codeproject.com](https://www.codeproject.com/Articles/5370966/Writing-a-Simple-Csharp-Files-Backup-Solution-for)
+
 Download the program at the "[Release](https://github.com/adriancs2/auto-folder-backup/releases)" section at the right side of this page.
 
 To begin with, please run "Setup.exe" for setting up the parameters, or else the program will do nothing until the required parameters are set. To avoid human error for accidentally modifying the setup parameters, rename "Setup.exe" to "Setup", or remove the file. 
