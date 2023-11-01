@@ -1,4 +1,4 @@
-# Automatic Folder Backup for File Server (Windows) for Small Office
+# Automatic Folder Backup for File Server (Windows)
 
 ![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot03.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot03.png)
 
