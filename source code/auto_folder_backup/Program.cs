@@ -398,10 +398,19 @@ Total Skipped = {TotalSkipped}";
             }
 
             // Find the next drive after the one with the latest folder
+
+            // Get the current position drive letter in the array (list)
             int latestDriveIndex = Array.IndexOf(lstMyDrive, latestDrive);
 
-            // Use the modulo operator to wrap around to the beginning of the array if needed
-            latestDriveIndex = (latestDriveIndex + 1) % lstMyDrive.Length;
+            // Move towards the next drive
+            latestDriveIndex++;
+
+            // The index position falls out the array (list)
+            if (latestDriveIndex >= lstMyDrive.Length)
+            {
+                // Going back to the first drive
+                latestDriveIndex = 0;
+            }
 
             return lstMyDrive[latestDriveIndex];
 
@@ -443,7 +452,7 @@ Total Skipped = {TotalSkipped}";
             }
 
             // Copy all files from source to destination folder
-            string[] files;
+            string[] files = null;
             try
             {
                 files = Directory.GetFiles(sourceFolder);
@@ -451,74 +460,76 @@ Total Skipped = {TotalSkipped}";
             catch (UnauthorizedAccessException)
             {
                 failWriter.WriteLine($"{sourceFolder}\r\nAccess Denied\r\n");
-                return;
             }
             catch (Exception e)
             {
                 failWriter.WriteLine($"{sourceFolder}\r\n{e.Message}\r\n");
-                return;
             }
 
-            TotalFiles += files.Length;
-
-            foreach (string file in files)
+            if (files != null && files.Length > 0)
             {
-                try
+                TotalFiles += files.Length;
+
+                foreach (string file in files)
                 {
-                    string name = Path.GetFileName(file);
-                    string dest = Path.Combine(destFolder, name);
-
-                    // Check if the file exists in the destination folder
-                    if (File.Exists(dest))
+                    try
                     {
-                        // Compare last write times
-                        DateTime srcWriteTime = File.GetLastWriteTime(file);
-                        DateTime destWriteTime = File.GetLastWriteTime(dest);
+                        string name = Path.GetFileName(file);
+                        string dest = Path.Combine(destFolder, name);
 
-                        // If the source file has a later write time, copy it over
-                        if (srcWriteTime > destWriteTime)
+                        // Check if the file exists in the destination folder
+                        if (File.Exists(dest))
                         {
+                            // Compare last write times
+                            DateTime srcWriteTime = File.GetLastWriteTime(file);
+                            DateTime destWriteTime = File.GetLastWriteTime(dest);
+
+                            // If the source file has a later write time, copy it over
+                            if (srcWriteTime > destWriteTime)
+                            {
+                                // Overwrite if file already exists
+                                File.Copy(file, dest, true);
+
+                                FileInfo fileInfo = new FileInfo(file);
+                                double fileSize = (double)fileInfo.Length / 1048576.0;  // Convert to MB
+                                successWriter.WriteLine($"{fileSize:000.000} MB - (updated) {file}");
+                                TotalSuccess++;
+                            }
+                            else
+                            {
+                                // Else, skip copying the file
+                                TotalSkipped++;
+                            }
+                        }
+                        else
+                        {
+                            // If the file doesn't exist in the destination, copy it over
                             // Overwrite if file already exists
                             File.Copy(file, dest, true);
 
                             FileInfo fileInfo = new FileInfo(file);
                             double fileSize = (double)fileInfo.Length / 1048576.0;  // Convert to MB
-                            successWriter.WriteLine($"{fileSize:000.000} MB - (updated) {file}");
+                            successWriter.WriteLine($"{fileSize:000.000} MB - {file}");
                             TotalSuccess++;
                         }
-                        else
-                        {
-                            // Else, skip copying the file
-                            TotalSkipped++;
-                        }
                     }
-                    else
+                    catch (UnauthorizedAccessException)
                     {
-                        // If the file doesn't exist in the destination, copy it over
-                        // Overwrite if file already exists
-                        File.Copy(file, dest, true);
-
-                        FileInfo fileInfo = new FileInfo(file);
-                        double fileSize = (double)fileInfo.Length / 1048576.0;  // Convert to MB
-                        successWriter.WriteLine($"{fileSize:000.000} MB - {file}");
-                        TotalSuccess++;
+                        failWriter.WriteLine($"{file}\r\nAccess Denied\r\n");
+                        TotalFailed++;
                     }
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    failWriter.WriteLine($"{file}\r\nAccess Denied\r\n");
-                    TotalFailed++;
-                }
-                catch (Exception e)
-                {
-                    TotalFailed++;
-                    failWriter.WriteLine($"{file}\r\n{e.Message}\r\n");
+                    catch (Exception e)
+                    {
+                        TotalFailed++;
+                        failWriter.WriteLine($"{file}\r\n{e.Message}\r\n");
+                    }
                 }
             }
 
 
             // Copy all subfolders from source to destination folder
-            string[] folders;
+            string[] folders = null;
+
             try
             {
                 folders = Directory.GetDirectories(sourceFolder);
@@ -526,31 +537,32 @@ Total Skipped = {TotalSkipped}";
             catch (UnauthorizedAccessException)
             {
                 failWriter.WriteLine($"{sourceFolder}\r\nAccess denied\r\n");
-                return;
             }
             catch (Exception e)
             {
                 failWriter.WriteLine($"{sourceFolder}\r\nAccess {e.Message}\r\n");
-                return;
             }
 
-            TotalSubFolders += folders.Length;
-
-            foreach (string folder in folders)
+            if (folders != null && folders.Length > 0)
             {
-                try
+                TotalSubFolders += folders.Length;
+
+                foreach (string folder in folders)
                 {
-                    string name = Path.GetFileName(folder);
-                    string dest = Path.Combine(destFolder, name);
-                    BackupDirectory(folder, dest, successWriter, failWriter);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    failWriter.WriteLine($"{folder}\r\nAccess denied\r\n");
-                }
-                catch (Exception e)
-                {
-                    failWriter.WriteLine($"{sourceFolder}\r\nAccess {e.Message}\r\n");
+                    try
+                    {
+                        string name = Path.GetFileName(folder);
+                        string dest = Path.Combine(destFolder, name);
+                        BackupDirectory(folder, dest, successWriter, failWriter);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        failWriter.WriteLine($"{folder}\r\nAccess denied\r\n");
+                    }
+                    catch (Exception e)
+                    {
+                        failWriter.WriteLine($"{sourceFolder}\r\nAccess {e.Message}\r\n");
+                    }
                 }
             }
         }
