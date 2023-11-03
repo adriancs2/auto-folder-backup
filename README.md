@@ -3,7 +3,7 @@
 ![https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot04.png](https://raw.githubusercontent.com/adriancs2/auto-folder-backup/main/wiki/screenshot04.png)
 
 <hr />
-Article: Writing a Simple C# Files Backup Solution for File Server:<br />  
+Article: Writing a Simple C# Files Backup Solution for File Server (Code Explained):<br />  
 
 [adriancs.com](https://adriancs.com/c-sharp/1273/writing-a-simple-files-backup-solution-in-c/) | [codeproject.com](https://www.codeproject.com/Articles/5370966/Writing-a-Simple-Csharp-Files-Backup-Solution-for)
 <hr />
