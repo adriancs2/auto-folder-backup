@@ -14,10 +14,14 @@ using System.Security.Cryptography;
 
 using System.Management;
 
+// version beta 0.4
+
+// when doing compiling, exclude this file from the source code
+// this file is kept here for historical reference purpose
 
 namespace System
 {
-    internal class Program
+    internal class Program_beta04
     {
         static Settings config = null;
 
@@ -30,7 +34,7 @@ namespace System
         static int TotalFailed = 0;
         static int TotalSkipped = 0;
 
-        static void Main(string[] args)
+        static void Main_beta04(string[] args)
         {
             ConfigFilePath = Path.Combine(Application.StartupPath, "config");
             BasicLogFilePath = Path.Combine(Application.StartupPath, "log.txt");
@@ -683,10 +687,5 @@ Total Skipped = {TotalSkipped}";
         }
     }
 
-    class Settings
-    {
-        public string TargetFolder = "";
-        public string BackupDriveLetters = "";
-        public int TotalDaysForFullBackup = 0;
-    }
+    
 }

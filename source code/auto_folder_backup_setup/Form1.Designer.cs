@@ -360,7 +360,7 @@
             this.lbFormTitle.Padding = new System.Windows.Forms.Padding(6, 8, 0, 0);
             this.lbFormTitle.Size = new System.Drawing.Size(812, 30);
             this.lbFormTitle.TabIndex = 28;
-            this.lbFormTitle.Text = "Auto Folder Backup (beta 0.4)";
+            this.lbFormTitle.Text = "Auto Folder Backup V1.0";
             this.lbFormTitle.MouseDown += new System.Windows.Forms.MouseEventHandler(this.lbFormTitle_MouseDown);
             this.lbFormTitle.MouseMove += new System.Windows.Forms.MouseEventHandler(this.lbFormTitle_MouseMove);
             this.lbFormTitle.MouseUp += new System.Windows.Forms.MouseEventHandler(this.lbFormTitle_MouseUp);

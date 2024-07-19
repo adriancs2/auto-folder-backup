@@ -26,7 +26,7 @@ namespace System
         public Form1()
         {
             ConfigFilePath = Path.Combine(Application.StartupPath, "config");
-            BasicLogFilePath = Path.Combine(Application.StartupPath, "log.txt");
+            BasicLogFilePath = Path.Combine(Application.StartupPath, "log");
 
             bw = new BackgroundWorker();
             bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
@@ -227,20 +227,18 @@ namespace System
 
         private void btOpenLogFile_Click(object sender, EventArgs e)
         {
-            if (File.Exists(BasicLogFilePath))
+            try
             {
-                try
+                Process.Start(new ProcessStartInfo()
                 {
-                    Process.Start(BasicLogFilePath);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message);
-                }
+                    FileName = BasicLogFilePath,
+                    UseShellExecute = true,
+                    Verb = "open"
+                });
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("No log file created yet. Backup task is not executed yet.");
+                MessageBox.Show(ex.Message);
             }
         }
 
