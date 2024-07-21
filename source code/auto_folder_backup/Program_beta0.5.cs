@@ -114,7 +114,8 @@ namespace System
                 }
                 else
                 {
-                    RemainingFreeSpace = TotalOldArchiveSize + TotalDiskFreeSpace;
+                    // This value has already been collected during GetDestinationFolder() for incremental backup
+                    // RemainingFreeSpace = TotalDiskFreeSpace + TotalOldArchiveSize
                 }
 
                 DateTime timeAfterGettingDestinationFolder = DateTime.Now;
@@ -544,7 +545,7 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
                             // proceed incremental backup
                             WriteLog($"Drive {startDrive.Name[0]} has enough space for incremental backup");
                             WriteLog("Executing incremental backup");
-                            return (startDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), startDrive, true);
+                            return (startDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), startDrive, false);
                         }
                         else
                         {
@@ -869,9 +870,39 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
                     string destFilePath = Path.Combine(destFolderInfo.FullName, file.Name);
                     FileInfo destFileInfo = new FileInfo(destFilePath);
 
-                    if (destFileInfo.Exists)
+                    if (IsFullBackup)
                     {
-                        // Check if the archive attribute is set on the source file
+                        // Full backup
+
+                        if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(file))
+                        {
+                            using (FileStream sourceStream = file.OpenRead())
+                            {
+                                using (FileStream destStream = File.Create(destFilePath))
+                                {
+                                    sourceStream.CopyTo(destStream);
+                                }
+                            }
+
+                            // Reset the archive attribute on the source file
+                            file.Attributes &= ~FileAttributes.Archive;
+
+                            // Write the file information to the success log
+                            successWriter.WriteLine(file.FullName);
+
+                            // Increment the success counter
+                            TotalSuccess++;
+                        }
+                        else
+                        {
+                            WriteLog($"Progrm stopped at: {file.FullName}");
+                            throw new Exception("Not enough disk space. Program terminated.");
+                        }
+                    }
+                    else
+                    {
+                        // Incremental backup
+
                         if (FileIsArchive(file))
                         {
                             if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(file))
@@ -901,40 +932,6 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
                                 WriteLog($"Program stopped at: {file.FullName}");
                                 throw new Exception("Not enough disk space. Program terminated.");
                             }
-                        }
-                        else
-                        {
-                            // If the archive attribute is not set, skip the file
-                            TotalSkipped++;
-                        }
-                    }
-                    else
-                    {
-                        // If the destination file doesn't exist, create it and copy the source file contents
-
-                        if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(file))
-                        {
-                            using (FileStream sourceStream = file.OpenRead())
-                            {
-                                using (FileStream destStream = File.Create(destFilePath))
-                                {
-                                    sourceStream.CopyTo(destStream);
-                                }
-                            }
-
-                            // Reset the archive attribute on the source file
-                            file.Attributes &= ~FileAttributes.Archive;
-
-                            // Write the file information to the success log
-                            successWriter.WriteLine(file.FullName);
-
-                            // Increment the success counter
-                            TotalSuccess++;
-                        }
-                        else
-                        {
-                            WriteLog($"Progrm stopped at: {file.FullName}");
-                            throw new Exception("Not enough disk space. Program terminated.");
                         }
                     }
 
