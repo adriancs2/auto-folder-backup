@@ -86,6 +86,8 @@ namespace System
                     TotalIncrementBackupBufferSize = (long)(TotalIncrementBackupSize * 0.1);
                 }
 
+                TotalIncrementBackupAndBufferSize = TotalIncrementBackupSize + TotalIncrementBackupBufferSize;
+
                 WriteLog($@"Acquired backup size.......
 
                      Total Full Backup Size            : {FormatGB(TotalFullBackupSize)} GB ({TotalFullBackupSize})
@@ -124,7 +126,7 @@ namespace System
 
                 TimeSpan tsTotalTimeGettingDestinationFolder = timeAfterGettingDestinationFolder - timeAfterGettingSize;
 
-                WriteLog($"Acquired destination folder: {destinationFolder.FullName} ({tsTotalTimeGettingDestinationFolder.Minutes} m {tsTotalTimeGettingDestinationFolder.Seconds} s)");
+                WriteLog($"Acquired destination folder: \"{destinationFolder.FullName}\" ({tsTotalTimeGettingDestinationFolder.Minutes} m {tsTotalTimeGettingDestinationFolder.Seconds} s)");
 
                 WriteLog("Backup process begin");
 

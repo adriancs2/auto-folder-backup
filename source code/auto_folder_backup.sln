@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "auto_folder_backup", "auto_
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "auto_folder_backup_setup", "auto_folder_backup_setup\auto_folder_backup_setup.csproj", "{74937E2F-E54D-486A-867F-4A1438B0747D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "auto_folder_backup_debug_helper", "auto_folder_backup_debug_helper\auto_folder_backup_debug_helper.csproj", "{F06A90B9-944B-43C8-A0C0-31AF02766388}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{74937E2F-E54D-486A-867F-4A1438B0747D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74937E2F-E54D-486A-867F-4A1438B0747D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74937E2F-E54D-486A-867F-4A1438B0747D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F06A90B9-944B-43C8-A0C0-31AF02766388}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F06A90B9-944B-43C8-A0C0-31AF02766388}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F06A90B9-944B-43C8-A0C0-31AF02766388}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F06A90B9-944B-43C8-A0C0-31AF02766388}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
