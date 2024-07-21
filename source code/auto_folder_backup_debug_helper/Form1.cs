@@ -41,6 +41,7 @@ namespace auto_folder_backup_debug_helper
         int totalFilesSet = 0;
 
         BackgroundWorker bw = new BackgroundWorker();
+        BackgroundWorker bw2 = new BackgroundWorker();
 
         public Form1()
         {
@@ -61,6 +62,9 @@ namespace auto_folder_backup_debug_helper
 
             bw.DoWork += Bw_DoWork;
             bw.RunWorkerCompleted += Bw_RunWorkerCompleted;
+
+            bw2.DoWork += Bw2_DoWork;
+            bw2.RunWorkerCompleted += Bw2_RunWorkerCompleted;
         }
 
         private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -121,7 +125,7 @@ namespace auto_folder_backup_debug_helper
 
             if (bw.IsBusy)
             {
-                MessageBox.Show("busy, please wait");
+                MessageBox.Show("I'm busy, please wait");
                 return;
             }
 
@@ -207,5 +211,45 @@ namespace auto_folder_backup_debug_helper
                 catch { }
             }
         }
+
+        int totalRandomFiles = 0;
+
+        private void btRandomFiles_Click(object sender, EventArgs e)
+        {
+            if (bw2.IsBusy)
+            {
+                MessageBox.Show("I'm busy generating files. Hold on.");
+                return;
+            }
+
+            targetFolder = txtFolder.Text;
+            totalRandomFiles = (int)nmRandomFiles.Value;
+
+            bw2.RunWorkerAsync();
+        }
+
+        private void Bw2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            MessageBox.Show("done");
+        }
+
+        private void Bw2_DoWork(object sender, DoWorkEventArgs e)
+        {
+            DirectoryInfo folder = new DirectoryInfo(targetFolder);
+
+            string foldername = "random-" + DateTime.Now.ToString("yyyyMMddHHmmss");
+
+            var subDir = folder.CreateSubdirectory(foldername);
+
+            for(int i = 0; i < totalRandomFiles; i ++)
+            {
+                string filename = i.ToString().PadLeft(8, '0');
+
+                string filepath = Path.Combine(subDir.FullName, $"{filename}.txt");
+
+                File.WriteAllText(filepath, filename);
+            }
+        }
+
     }
 }

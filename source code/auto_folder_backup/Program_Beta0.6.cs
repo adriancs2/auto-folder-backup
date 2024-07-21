@@ -67,7 +67,7 @@ namespace System
 
                 GetAvailableDestinationDrives();
 
-                WriteLog("Process started");
+                WriteLog("Acquiring backup size...");
 
                 // Calculate the total size of the target directory
                 GetDirectorySize(SourceFolder);
@@ -338,6 +338,12 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
         {
             try
             {
+                // Skip if the source folder is in the Recycle Bin
+                if (IsRecycleBinPath(folderInfo.FullName))
+                {
+                    return;
+                }
+
                 // Check if the folder is accessible
                 if (!folderInfo.Exists)
                 {
@@ -377,6 +383,23 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             {
                 WriteLog(exFolder.Message);
             }
+        }
+
+        static string[] recycleBinNames = { "$RECYCLE.BIN", "$Recycle.Bin", "System Volume Information" };
+
+        static bool IsRecycleBinPath(string path)
+        {
+            foreach (string recycleBinName in recycleBinNames)
+            {
+                if (path.Contains(Path.DirectorySeparatorChar + recycleBinName + Path.DirectorySeparatorChar) ||
+                    path.EndsWith(Path.DirectorySeparatorChar + recycleBinName))
+                {
+                    WriteLog($"GetDirectorySize - Skipping folder: {path}");
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Windows API Call - Get the file allocation size
@@ -545,6 +568,8 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                         WriteLog($"Total estimated available size: {FormatGB(RemainingFreeSpace)} GB ({RemainingFreeSpace}), Old archive size + free sapce");
 
+                        WriteLog($"Total incremental size is {FormatGB(TotalIncrementBackupAndBufferSize)} GB ({TotalIncrementBackupAndBufferSize})");
+
                         bool enoughFreeSpace = RemainingFreeSpace > TotalIncrementBackupAndBufferSize;
 
                         if (enoughFreeSpace)
@@ -560,8 +585,8 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                             // cancel incremental backup
                             // switch to next drive and do new full backup
 
-                            WriteLog($"Insufficient space at Drive {startDrive.Name[0]}");
-                            WriteLog("Give up incremental backup");
+                            WriteLog($"Insufficient space at Drive {startDrive.Name[0]} for incremental backup");
+                            WriteLog("Give up incremental backup, switch to next drive and attempt for full backup");
 
                             (DirectoryInfo dir, DriveInfo drv) = GetFullBackupFolder(startDrive);
 
@@ -678,6 +703,8 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                     thisIndex = thisIndex - AvailableDrives.Count;
                 }
 
+                long spacesize = checkFreeSpaceOnly ? AvailableDrives[thisIndex].AvailableFreeSpace : AvailableDrives[thisIndex].TotalSize;
+
                 if (CheckDriveSpace(requiredSpace, AvailableDrives[thisIndex], checkFreeSpaceOnly, null))
                 {
                     return AvailableDrives[thisIndex];
@@ -695,12 +722,12 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                 if (drv.AvailableFreeSpace > requiredSpace)
                 {
-                    WriteLog($"Drive {drv.Name[0]} selected (Free space = {FormatGB(drv.AvailableFreeSpace)} GB)");
+                    WriteLog($"Drive {drv.Name[0]} selected (Free space = {FormatGB(drv.AvailableFreeSpace)} GB, {drv.AvailableFreeSpace})");
                     return true;
                 }
                 else
                 {
-                    WriteLog($"Drive {drv.Name[0]} does not has enough free space ({FormatGB(drv.AvailableFreeSpace)} GB)");
+                    WriteLog($"Drive {drv.Name[0]} does not has enough free space ({FormatGB(drv.AvailableFreeSpace)} GB, {drv.AvailableFreeSpace})");
                 }
             }
             else
@@ -709,12 +736,12 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                 if (drv.TotalSize > requiredSpace)
                 {
-                    WriteLog($"Drive {drv.Name[0]} selected (Disk size = {FormatGB(drv.TotalSize)} GB)");
+                    WriteLog($"Drive {drv.Name[0]} selected (Disk size = {FormatGB(drv.TotalSize)} GB, {drv.TotalSize})");
                     return true;
                 }
                 else
                 {
-                    WriteLog($"Drive {drv.Name[0]} does not has enough disk size ({FormatGB(drv.TotalSize)} GB)");
+                    WriteLog($"Drive {drv.Name[0]} does not has enough disk size ({FormatGB(drv.TotalSize)} GB, {drv.TotalSize})");
                 }
             }
 
@@ -749,10 +776,10 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
         static (DirectoryInfo, DriveInfo) GetFullBackupFolder(DriveInfo startDrive)
         {
-            // null, no backup is ever executed, start from the first drive
-            // not null, backup is execute, continue at this drive
-
             // check for free space
+
+            WriteLog("Preparing for full backup");
+            WriteLog($"Full backup + buffer size: {(FormatGB(TotalFullBackupAndBufferSize))} GB, {TotalFullBackupAndBufferSize}");
 
             var freeDrive = GetDriveWithEnoughSpace(TotalFullBackupAndBufferSize, startDrive, true, false);
 
@@ -761,6 +788,9 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                 // None of the drive has enough free space
                 // Require format
                 // Get next drive for format
+
+                WriteLog("None of the drive has enough FREE space");
+                WriteLog("A format is require");
 
                 DriveInfo diskDrive = GetDriveWithEnoughSpace(TotalFullBackupAndBufferSize, startDrive, false, true);
 
@@ -873,6 +903,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             {
                 try
                 {
+
                     // Construct the destination file path
                     string destFilePath = Path.Combine(destFolderInfo.FullName, sourceFile.Name);
                     FileInfo destFileInfo = new FileInfo(destFilePath);
@@ -887,7 +918,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                         }
                         else
                         {
-                            WriteLog($"Progrm stopped at: {sourceFile.FullName}");
+                            WriteLog($"Program stopped at: {sourceFile.FullName}");
                             throw new Exception("Not enough disk space. Program terminated.");
                         }
                     }
@@ -931,6 +962,12 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             {
                 try
                 {
+                    // Skip if the subdirectory is in the Recycle Bin
+                    if (IsRecycleBinPath(subDir.FullName))
+                    {
+                        continue;
+                    }
+
                     // Increment the total subfolder count
                     TotalSubFolders++;
 

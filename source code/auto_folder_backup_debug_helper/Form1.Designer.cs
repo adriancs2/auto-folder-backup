@@ -33,12 +33,15 @@
             this.nmPercent = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
             this.rbSet = new System.Windows.Forms.RadioButton();
-            this.label4 = new System.Windows.Forms.Label();
             this.btFolder = new System.Windows.Forms.Button();
             this.txtFolder = new System.Windows.Forms.TextBox();
             this.rbRemove = new System.Windows.Forms.RadioButton();
             this.btRun = new System.Windows.Forms.Button();
+            this.btRandomFiles = new System.Windows.Forms.Button();
+            this.nmRandomFiles = new System.Windows.Forms.NumericUpDown();
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.nmPercent)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmRandomFiles)).BeginInit();
             this.SuspendLayout();
             // 
             // label1
@@ -89,22 +92,13 @@
             this.rbSet.Text = "Set \"Archive\" Attribute to Selected Files";
             this.rbSet.UseVisualStyleBackColor = true;
             // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(27, 118);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(108, 20);
-            this.label4.TabIndex = 5;
-            this.label4.Text = "Target Folder:";
-            // 
             // btFolder
             // 
-            this.btFolder.Location = new System.Drawing.Point(141, 113);
+            this.btFolder.Location = new System.Drawing.Point(31, 117);
             this.btFolder.Name = "btFolder";
-            this.btFolder.Size = new System.Drawing.Size(137, 30);
+            this.btFolder.Size = new System.Drawing.Size(430, 30);
             this.btFolder.TabIndex = 6;
-            this.btFolder.Text = "Select Folder";
+            this.btFolder.Text = "Select the folder that you\'re currently doing backup test";
             this.btFolder.UseVisualStyleBackColor = true;
             this.btFolder.Click += new System.EventHandler(this.btFolder_Click);
             // 
@@ -129,7 +123,7 @@
             // 
             // btRun
             // 
-            this.btRun.Location = new System.Drawing.Point(31, 346);
+            this.btRun.Location = new System.Drawing.Point(31, 349);
             this.btRun.Name = "btRun";
             this.btRun.Size = new System.Drawing.Size(123, 48);
             this.btRun.TabIndex = 9;
@@ -137,15 +131,53 @@
             this.btRun.UseVisualStyleBackColor = true;
             this.btRun.Click += new System.EventHandler(this.btRun_Click);
             // 
+            // btRandomFiles
+            // 
+            this.btRandomFiles.Location = new System.Drawing.Point(160, 349);
+            this.btRandomFiles.Name = "btRandomFiles";
+            this.btRandomFiles.Size = new System.Drawing.Size(210, 48);
+            this.btRandomFiles.TabIndex = 10;
+            this.btRandomFiles.Text = "Generate Random Files";
+            this.btRandomFiles.UseVisualStyleBackColor = true;
+            this.btRandomFiles.Click += new System.EventHandler(this.btRandomFiles_Click);
+            // 
+            // nmRandomFiles
+            // 
+            this.nmRandomFiles.Location = new System.Drawing.Point(376, 361);
+            this.nmRandomFiles.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nmRandomFiles.Name = "nmRandomFiles";
+            this.nmRandomFiles.Size = new System.Drawing.Size(70, 26);
+            this.nmRandomFiles.TabIndex = 11;
+            this.nmRandomFiles.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(452, 363);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(107, 20);
+            this.label4.TabIndex = 12;
+            this.label4.Text = "Random Files";
+            // 
             // Form1
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.ClientSize = new System.Drawing.Size(624, 409);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.nmRandomFiles);
+            this.Controls.Add(this.btRandomFiles);
             this.Controls.Add(this.btRun);
             this.Controls.Add(this.rbRemove);
             this.Controls.Add(this.txtFolder);
             this.Controls.Add(this.btFolder);
-            this.Controls.Add(this.label4);
             this.Controls.Add(this.rbSet);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.nmPercent);
@@ -157,6 +189,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.nmPercent)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nmRandomFiles)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -169,11 +202,13 @@
         private System.Windows.Forms.NumericUpDown nmPercent;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.RadioButton rbSet;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btFolder;
         private System.Windows.Forms.TextBox txtFolder;
         private System.Windows.Forms.RadioButton rbRemove;
         private System.Windows.Forms.Button btRun;
+        private System.Windows.Forms.Button btRandomFiles;
+        private System.Windows.Forms.NumericUpDown nmRandomFiles;
+        private System.Windows.Forms.Label label4;
     }
 }
 
