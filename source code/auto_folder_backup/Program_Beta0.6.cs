@@ -545,7 +545,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                         WriteLog($"Total estimated available size: {FormatGB(RemainingFreeSpace)} GB ({RemainingFreeSpace}), Old archive size + free sapce");
 
-                        bool enoughFreeSpace = RemainingFreeSpace > TotalIncrementBackupBufferSize;
+                        bool enoughFreeSpace = RemainingFreeSpace > TotalIncrementBackupAndBufferSize;
 
                         if (enoughFreeSpace)
                         {
