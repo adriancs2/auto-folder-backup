@@ -67,47 +67,6 @@ namespace auto_folder_backup_debug_helper
             bw2.RunWorkerCompleted += Bw2_RunWorkerCompleted;
         }
 
-        private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            MessageBox.Show(error + "\r\n\r\nTotal Files: " + totalFiles + "\r\nTotal Files Set: " + totalFilesSet);
-        }
-
-        private void Bw_DoWork(object sender, DoWorkEventArgs e)
-        {
-            try
-            {
-                totalFiles = 0;
-
-                DirectoryInfo dir = new DirectoryInfo(targetFolder);
-
-                try
-                {
-                    CountFiles(dir);
-                }
-                catch { }
-
-                if (totalFiles == 0)
-                    return;
-
-                targetFiles = totalFiles * percent / 100;
-                intervalcount = totalFiles / (totalFiles - targetFiles);
-                if (intervalcount < 1)
-                    intervalcount = 1;
-
-                try
-                {
-                    RunFileAttribute(dir);
-                }
-                catch { }
-
-                error = "done";
-            }
-            catch (Exception ex)
-            {
-                error = ex.Message;
-            }
-        }
-
         private void btFolder_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog f = new FolderBrowserDialog();
@@ -149,68 +108,105 @@ namespace auto_folder_backup_debug_helper
             }
         }
 
+        private void Bw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            MessageBox.Show(error + "\r\n\r\nTotal Files: " + totalFiles + "\r\nExpected Target Files: " + targetFiles + "\r\nTotal Files Set: " + totalFilesSet+"\r\nInterval Count: "+intervalcount);
+        }
+
+        static readonly string[] recycleBinNames = { "$RECYCLE.BIN", "$Recycle.Bin", "System Volume Information" };
+
+        static bool IsRecycleBinPath(string path)
+        {
+            string normalizedPath = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar);
+            string[] pathParts = normalizedPath.Split(Path.DirectorySeparatorChar);
+
+            return pathParts.Any(part => recycleBinNames.Contains(part, StringComparer.OrdinalIgnoreCase));
+        }
+
+        private void Bw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                totalFiles = 0;
+                DirectoryInfo dir = new DirectoryInfo(targetFolder);
+
+                try
+                {
+                    CountFiles(dir);
+                }
+                catch { }
+
+                if (totalFiles == 0)
+                    return;
+
+                targetFiles = totalFiles * percent / 100;
+                intervalcount = totalFiles / targetFiles;
+                curindex = 0;
+
+                AttributeFolderFiles(dir);
+
+                error = "done";
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+            }
+        }
+
+        void AttributeFolderFiles(DirectoryInfo dir)
+        {
+            foreach(var subdir in dir.EnumerateDirectories())
+            {
+                if (IsRecycleBinPath(subdir.FullName))
+                {
+                    continue;
+                }
+
+                AttributeFolderFiles(subdir);
+            }
+
+            foreach (var file in dir.EnumerateFiles())
+            {
+                curindex++;
+
+                if (curindex >= intervalcount)
+                {
+                    curindex = 0;
+
+                    if (rbSet.Checked)
+                    {
+                        file.Attributes |= FileAttributes.Archive;
+                    }
+                    else
+                    {
+                        file.Attributes &= ~FileAttributes.Archive;
+                    }
+
+                    totalFilesSet++;
+                }
+            }
+        }
+
         void CountFiles(DirectoryInfo dir)
         {
             try
             {
+                foreach(var subdir in dir.EnumerateDirectories())
+                {
+                    if (IsRecycleBinPath(subdir.FullName))
+                        continue;
+
+                    CountFiles(subdir);
+                }
+
                 foreach (FileInfo file in dir.EnumerateFiles())
                 {
-                    try
-                    {
-                        totalFiles++;
-                    }
-                    catch { }
+                    totalFiles++;
                 }
             }
             catch { }
-
-            foreach (DirectoryInfo subDir in dir.EnumerateDirectories())
-            {
-                try
-                {
-                    CountFiles(subDir);
-                }
-                catch { }
-            }
         }
 
-        void RunFileAttribute(DirectoryInfo dir)
-        {
-            foreach (FileInfo file in dir.EnumerateFiles())
-            {
-                try
-                {
-                    if (totalFilesSet >= targetFiles)
-                        return;
-
-                    curindex++;
-
-                    if (curindex % intervalcount == 0)
-                    {
-                        if (rbSet.Checked)
-                        {
-                            file.Attributes |= FileAttributes.Archive;
-                        }
-                        else
-                        {
-                            file.Attributes &= ~FileAttributes.Archive;
-                        }
-
-                        totalFilesSet++;
-                    }
-                }
-                catch { }
-            }
-
-            foreach (DirectoryInfo subDir in dir.EnumerateDirectories())
-            {
-                try
-                {
-                    RunFileAttribute(subDir);
-                }
-                catch { }
-            }
-        }
 
         int totalRandomFiles = 0;
 

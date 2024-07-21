@@ -74,16 +74,22 @@ namespace System
 
                 if (TotalFullBackupSize > 0L)
                 {
-                    // 10%
-                    TotalFullBackupBufferSize = (long)(TotalFullBackupSize * 0.1);
+                    // 20% buffer
+                    TotalFullBackupBufferSize = (long)(TotalFullBackupSize * 0.2);
+
+                    // Add 1 GB to the buffer
+                    TotalFullBackupBufferSize += (long)(1024 * 1024 * 1024); // 1 GB in bytes
                 }
 
                 TotalFullBackupAndBufferSize = TotalFullBackupSize + TotalFullBackupBufferSize;
 
                 if (TotalIncrementBackupSize > 0L)
                 {
-                    // 10%
-                    TotalIncrementBackupBufferSize = (long)(TotalIncrementBackupSize * 0.1);
+                    // 120% buffer
+                    TotalIncrementBackupBufferSize = (long)(TotalIncrementBackupSize * 1.2);
+
+                    // Add 1 GB to the buffer
+                    TotalIncrementBackupBufferSize += (long)(1024 * 1024 * 1024); // 1 GB in bytes
                 }
 
                 TotalIncrementBackupAndBufferSize = TotalIncrementBackupSize + TotalIncrementBackupBufferSize;
