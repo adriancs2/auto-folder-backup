@@ -12,11 +12,11 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 
 
-// Version: Beta 0.5
+// Version: Beta 0.6
 
 namespace System
 {
-    internal class Program_Beta05
+    internal class Program_Beta06
     {
         static Settings config = null;
 
@@ -451,7 +451,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                 // Condition 1: Always Full Backup only
                 // ===============================================
 
-                WriteLog("Condition 1: Always Full Backup only");
+                WriteLog("Condition 1: Program is set to always run full backup");
                 WriteLog($"Total required backup size: {FormatGB(TotalFullBackupAndBufferSize)} GB");
 
                 // Check is there any backup ever executed
@@ -867,40 +867,25 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             }
 
             // Iterate through each file in the source directory (non-recursive)
-            foreach (FileInfo file in sourceFolderInfo.EnumerateFiles("*", SearchOption.TopDirectoryOnly))
+            foreach (FileInfo sourceFile in sourceFolderInfo.EnumerateFiles("*", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
                     // Construct the destination file path
-                    string destFilePath = Path.Combine(destFolderInfo.FullName, file.Name);
+                    string destFilePath = Path.Combine(destFolderInfo.FullName, sourceFile.Name);
                     FileInfo destFileInfo = new FileInfo(destFilePath);
 
                     if (IsFullBackup)
                     {
                         // Full backup
 
-                        if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(file))
+                        if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(sourceFile))
                         {
-                            using (FileStream sourceStream = file.OpenRead())
-                            {
-                                using (FileStream destStream = File.Create(destFilePath))
-                                {
-                                    sourceStream.CopyTo(destStream);
-                                }
-                            }
-
-                            // Reset the archive attribute on the source file
-                            file.Attributes &= ~FileAttributes.Archive;
-
-                            // Write the file information to the success log
-                            successWriter.WriteLine(file.FullName);
-
-                            // Increment the success counter
-                            TotalSuccess++;
+                            CopyFile(sourceFile, destFileInfo, successWriter, failWriter);
                         }
                         else
                         {
-                            WriteLog($"Progrm stopped at: {file.FullName}");
+                            WriteLog($"Progrm stopped at: {sourceFile.FullName}");
                             throw new Exception("Not enough disk space. Program terminated.");
                         }
                     }
@@ -908,33 +893,15 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                     {
                         // Incremental backup
 
-                        if (FileIsArchive(file))
+                        if (FileIsArchive(sourceFile))
                         {
-                            if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(file))
+                            if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(sourceFile))
                             {
-                                using (FileStream sourceStream = file.OpenRead())
-                                {
-                                    using (FileStream destStream = destFileInfo.OpenWrite())
-                                    {
-                                        sourceStream.CopyTo(destStream);
-                                    }
-                                }
-
-                                // Reset the archive attribute on the source file
-                                file.Attributes &= ~FileAttributes.Archive;
-
-                                // Calculate the file size in MB
-                                double fileSize = (double)file.Length / 1048576.0;
-
-                                // Write the updated file information to the success log
-                                successWriter.WriteLine($"{fileSize:000.000} MB - (updated) {file.FullName}");
-
-                                // Increment the success counter
-                                TotalSuccess++;
+                                CopyFile(sourceFile, destFileInfo, successWriter, failWriter);
                             }
                             else
                             {
-                                WriteLog($"Program stopped at: {file.FullName}");
+                                WriteLog($"Program stopped at: {sourceFile.FullName}");
                                 throw new Exception("Not enough disk space. Program terminated.");
                             }
                         }
@@ -946,14 +913,14 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                 catch (UnauthorizedAccessException)
                 {
                     // Log an error message if access is denied to the file and update failed count
-                    failWriter.WriteLine($"Access Denied: {file.FullName}");
+                    failWriter.WriteLine($"Access Denied: {sourceFile.FullName}");
                     TotalFailed++;
                 }
                 catch (Exception e)
                 {
                     // Log an error message for any other exception and update failed count
                     TotalFailed++;
-                    failWriter.WriteLine($"{file.FullName}\r\n{e.Message}\r\n");
+                    failWriter.WriteLine($"{sourceFile.FullName}\r\n{e.Message}\r\n");
                 }
             }
 
@@ -982,6 +949,26 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                     failWriter.WriteLine($"{subDir.FullName}\r\n{e.Message}\r\n");
                 }
             }
+        }
+
+        static void CopyFile(FileInfo fileSource, FileInfo fileDest, StreamWriter successWriter, StreamWriter failWriter)
+        {
+            using (FileStream sourceStream = fileSource.OpenRead())
+            {
+                using (FileStream destStream = fileDest.OpenWrite())
+                {
+                    sourceStream.CopyTo(destStream);
+                }
+            }
+
+            // Reset the archive attribute on the source file
+            fileSource.Attributes &= ~FileAttributes.Archive;
+
+            // Write the file information to the success log
+            successWriter.WriteLine(fileSource.FullName);
+
+            // Increment the success counter
+            TotalSuccess++;
         }
 
         public static bool CheckEnoughDiskSpaceUpdateAvailableDiskSpace(FileInfo fileInfo)
