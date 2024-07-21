@@ -47,6 +47,7 @@ namespace System
 
         static long TotalDiskFreeSpaceAfterBackup = 0L;
 
+        static long TotalArchiveFiles = 0L;
         static long TotalFiles = 0L;
         static long TotalSubFolders = 0L;
         static long TotalSuccess = 0L;
@@ -86,6 +87,7 @@ namespace System
                 }
 
                 WriteLog($@"Acquired backup size.......
+
                      Total Full Backup Size            : {FormatGB(TotalFullBackupSize)} GB ({TotalFullBackupSize})
                      Total Full Backup Buffer          : {FormatGB(TotalFullBackupBufferSize)} GB ({TotalFullBackupBufferSize})
                      Total Full Backup + Buffer        : {FormatGB(TotalFullBackupAndBufferSize)} GB ({TotalFullBackupAndBufferSize})
@@ -124,21 +126,22 @@ namespace System
 
                 WriteLog($"Acquired destination folder: {destinationFolder.FullName} ({tsTotalTimeGettingDestinationFolder.Minutes} m {tsTotalTimeGettingDestinationFolder.Seconds} s)");
 
-                // Initialize counters
-                TotalFiles = 0;
-                TotalSubFolders = 0;
-                TotalSuccess = 0;
-                TotalFailed = 0;
-                TotalSkipped = 0;
-
                 WriteLog("Backup process begin");
 
-                // Perform the backup operation
-                using (StreamWriter successWriter = new StreamWriter(successLogPath, true))
+                if (!IsFullBackup && TotalArchiveFiles == 0L)
                 {
-                    using (StreamWriter failWriter = new StreamWriter(failLogPath, true))
+                    WriteLog("There is no archived files to be backup.");
+                    WriteLog("No backup is required");
+                }
+                else
+                {
+                    // Perform the backup operation
+                    using (StreamWriter successWriter = new StreamWriter(successLogPath, true))
                     {
-                        BackupDirectory(SourceFolder, destinationFolder, successWriter, failWriter);
+                        using (StreamWriter failWriter = new StreamWriter(failLogPath, true))
+                        {
+                            BackupDirectory(SourceFolder, destinationFolder, successWriter, failWriter);
+                        }
                     }
                 }
 
@@ -160,26 +163,27 @@ namespace System
 
                 string statReport = $@"Backup Type = {(IsFullBackup ? "Full Backup" : "Incremental Backup")}
 
-Time Start        = {timeBeforeGettingSize:yyyy-MM-dd HH:mm:ss}
-Time End          = {timeEnd:yyyy-MM-dd HH:mm:ss}
-Time Spent        = {tsBackupTime.Days} d {tsBackupTime.Hours} h {tsBackupTime.Minutes} m {tsBackupTime.Seconds} s
+Time Start           = {timeBeforeGettingSize:yyyy-MM-dd HH:mm:ss}
+Time End             = {timeEnd:yyyy-MM-dd HH:mm:ss}
+Time Spent           = {tsBackupTime.Days} d {tsBackupTime.Hours} h {tsBackupTime.Minutes} m {tsBackupTime.Seconds} s
 
-Backup Size       = {FormatGB(_backupSize)} GB
-Buffer Size       = {FormatGB(_bufferSize)} GB
-Backup + Buffer   = {FormatGB(_backupBufferSize)} GB
+Backup Size          = {FormatGB(_backupSize)} GB
+Buffer Size          = {FormatGB(_bufferSize)} GB
+Backup + Buffer      = {FormatGB(_backupBufferSize)} GB
 
-Old Archive Size  = {FormatGB(TotalOldArchiveSize)} GB
+Old Archive Size     = {FormatGB(TotalOldArchiveSize)} GB
 
-Disk Size         = {FormatGB(destinationDrive2.TotalSize)} GB
-Free Space Before = {FormatGB(TotalDiskFreeSpace)} GB
-Free Space After  = {FormatGB(destinationDrive2.AvailableFreeSpace)} GB
+Disk Size            = {FormatGB(destinationDrive2.TotalSize)} GB
+Free Space Before    = {FormatGB(TotalDiskFreeSpace)} GB
+Free Space After     = {FormatGB(destinationDrive2.AvailableFreeSpace)} GB
 
-Total Files       = {FormatNumber(TotalFiles)}
-Total Sub-Folders = {FormatNumber(TotalSubFolders)}
+Total Files          = {FormatNumber(TotalFiles)} Files
+Total Archived Files = {FormatNumber(TotalArchiveFiles)} Files
+Total Sub-Folders    = {FormatNumber(TotalSubFolders)} Folders
 
-Total Success     = {FormatNumber(TotalSuccess)} Files 
-Total Failed      = {FormatNumber(TotalFailed)} Files
-Total Skipped     = {FormatNumber(TotalSkipped)} Files
+Total Success        = {FormatNumber(TotalSuccess)} Files 
+Total Failed         = {FormatNumber(TotalFailed)} Files
+Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
 ";
 
@@ -349,8 +353,9 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
                         TotalFullBackupSize += fileSize;
 
                         // File is marked as Archive, required for incremental backup
-                        if ((file.Attributes & FileAttributes.Archive) == FileAttributes.Archive)
+                        if (FileIsArchive(file))
                         {
+                            TotalArchiveFiles++;
                             TotalIncrementBackupSize += fileSize;
                         }
                     }
@@ -510,7 +515,7 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
 
                     TimeSpan tsBackupDaysOld = DateTime.Now - lastBackupDate;
 
-                    WriteLog($"Total days since last backup: {tsBackupDaysOld.TotalDays:0.0}");
+                    WriteLog($"Total days since last FULL backup: {tsBackupDaysOld.TotalDays:0.0}");
                     WriteLog($"Interval of days for full backup: {config.TotalDaysForFullBackup}");
 
                     if (tsBackupDaysOld.TotalDays < config.TotalDaysForFullBackup)
