@@ -85,6 +85,16 @@ namespace System
                     TotalIncrementBackupBufferSize = (long)(TotalIncrementBackupSize * 0.1);
                 }
 
+                WriteLog($@"Acquired backup size.......
+                     Total Full Backup Size            : {FormatGB(TotalFullBackupSize)} GB ({TotalFullBackupSize})
+                     Total Full Backup Buffer          : {FormatGB(TotalFullBackupBufferSize)} GB ({TotalFullBackupBufferSize})
+                     Total Full Backup + Buffer        : {FormatGB(TotalFullBackupAndBufferSize)} GB ({TotalFullBackupAndBufferSize})
+                     Total Incremental Backup Size     : {FormatGB(TotalIncrementBackupSize)} GB ({TotalIncrementBackupSize})
+                     Total Incremental Buffer Size     : {FormatGB(TotalIncrementBackupBufferSize)} GB ({TotalIncrementBackupBufferSize})
+                     Total Incremental Backup + Buffer : {FormatGB(TotalIncrementBackupAndBufferSize)} GB ({TotalIncrementBackupAndBufferSize})
+                     Total Achieve Size                : {FormatGB(TotalOldArchiveSize)} GB ({TotalOldArchiveSize})
+");
+
                 TotalIncrementBackupAndBufferSize = TotalIncrementBackupSize + TotalIncrementBackupBufferSize;
 
                 DateTime timeAfterGettingSize = DateTime.Now;
@@ -361,44 +371,6 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
             }
         }
 
-        static void GetOldBackupArchiveSize(DirectoryInfo _sourceFolder, DirectoryInfo oldBackupFolder)
-        {
-            try
-            {
-                foreach (var sourceSubFolder in _sourceFolder.EnumerateDirectories("*", SearchOption.TopDirectoryOnly))
-                {
-                    try
-                    {
-                        DirectoryInfo destSubFolder = GenerateDestinationFolder(oldBackupFolder, sourceSubFolder);
-
-                        if (!destSubFolder.Exists)
-                            continue;
-
-                        GetOldBackupArchiveSize(sourceSubFolder, oldBackupFolder);
-                    }
-                    catch { }
-                }
-
-                foreach (var fileInfo in _sourceFolder.EnumerateFiles("*", SearchOption.TopDirectoryOnly))
-                {
-                    try
-                    {
-                        if (!FileIsArchive(fileInfo))
-                            continue;
-
-                        FileInfo destFileInfo = new FileInfo(Path.Combine(oldBackupFolder.FullName, fileInfo.Name));
-
-                        if (destFileInfo.Exists)
-                        {
-                            TotalOldArchiveSize += GetFileAllocationSize(destFileInfo);
-                        }
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-        }
-
         // Windows API Call - Get the file allocation size
         [DllImport("kernel32.dll")]
         static extern uint GetCompressedFileSize(string lpFileName, out uint lpFileSizeHigh);
@@ -548,18 +520,31 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
 
                         // Attempt to perform Incremental Backup
 
-                        WriteLog("Condition 5: The total number of days elapsed since the last backup is still within the predefined interval for full backups");
+                        WriteLog("Condition 5: Days since last backup still within full backup interval");
+                        WriteLog("Attempt to find out if disk space enough for incremental backup");
 
-                        // Test free space on current drive
+                        WriteLog("Calculating old archive size from destination folder");
 
-                        bool enoughFreeSpace = CheckDriveSpace(TotalIncrementBackupAndBufferSize, startDrive, true, lastDir);
+                        TotalOldArchiveSize = 0L;
+
+                        GetOldBackupArchiveSize(SourceFolder, lastDir);
+
+                        WriteLog($"Old archive size is {FormatGB(TotalOldArchiveSize)} GB ({TotalOldArchiveSize})");
+
+                        WriteLog($"Free available space at destination Drive {startDrive.Name[0]} is {FormatGB(startDrive.AvailableFreeSpace)} GB ({startDrive.AvailableFreeSpace})");
+
+                        RemainingFreeSpace = startDrive.AvailableFreeSpace + TotalOldArchiveSize;
+
+                        WriteLog($"Total estimated available size: {FormatGB(RemainingFreeSpace)} GB ({RemainingFreeSpace}), Old archive size + free sapce");
+
+                        bool enoughFreeSpace = RemainingFreeSpace > TotalIncrementBackupBufferSize;
 
                         if (enoughFreeSpace)
                         {
                             // proceed incremental backup
-
+                            WriteLog($"Drive {startDrive.Name[0]} has enough space for incremental backup");
                             WriteLog("Executing incremental backup");
-                            return (startDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), startDrive, false);
+                            return (startDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), startDrive, true);
                         }
                         else
                         {
@@ -567,6 +552,7 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
                             // cancel incremental backup
                             // switch to next drive and do new full backup
 
+                            WriteLog($"Insufficient space at Drive {startDrive.Name[0]}");
                             WriteLog("Give up incremental backup");
 
                             (DirectoryInfo dir, DriveInfo drv) = GetFullBackupFolder(startDrive);
@@ -600,6 +586,47 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
                     }
                 }
             }
+        }
+
+        static void GetOldBackupArchiveSize(DirectoryInfo sourceFolderInfo, DirectoryInfo destFolderInfo)
+        {
+            // Calculates the total size of old archive files in the destination directory
+            // that correspond to the files in the source directory.
+
+            try
+            {
+                foreach (var fileInfo in sourceFolderInfo.EnumerateFiles("*", SearchOption.TopDirectoryOnly))
+                {
+                    try
+                    {
+                        if (!FileIsArchive(fileInfo))
+                            continue;
+
+                        FileInfo destFileInfo = new FileInfo(Path.Combine(destFolderInfo.FullName, fileInfo.Name));
+
+                        if (destFileInfo.Exists)
+                        {
+                            TotalOldArchiveSize += GetFileAllocationSize(destFileInfo);
+                        }
+                    }
+                    catch { }
+                }
+
+                foreach (var sourceSubDir in sourceFolderInfo.EnumerateDirectories("*", SearchOption.TopDirectoryOnly))
+                {
+                    try
+                    {
+                        DirectoryInfo destSubFolder = GenerateDestinationFolder(destFolderInfo, sourceSubDir);
+
+                        if (!destSubFolder.Exists)
+                            continue;
+
+                        GetOldBackupArchiveSize(sourceSubDir, destSubFolder);
+                    }
+                    catch { }
+                }
+            }
+            catch { }
         }
 
         static DriveInfo GetDriveWithEnoughSpace(long requiredSpace, DriveInfo startDrive, bool checkFreeSpaceOnly, bool startFromNextDrive)
@@ -658,41 +685,14 @@ Total Skipped     = {FormatNumber(TotalSkipped)} Files
             {
                 // Checking free space
 
-                bool checkOldArchive = (lastUsedBackupFolder != null);
-
-                if (checkOldArchive)
+                if (drv.AvailableFreeSpace > requiredSpace)
                 {
-                    TotalOldArchiveSize = 0L;
-
-                    GetOldBackupArchiveSize(SourceFolder, lastUsedBackupFolder);
-
-                    long targetDriveFreeSpace = drv.AvailableFreeSpace + TotalOldArchiveSize;
-
-                    WriteLog($"Total old archive files to be removed: {FormatGB(TotalOldArchiveSize)} GB");
-                    WriteLog($"Existing free space on Drive {FormatGB(drv.AvailableFreeSpace)} GB");
-                    WriteLog($"Total free space after remove old archive files: {FormatGB(targetDriveFreeSpace)} GB");
-
-                    if (targetDriveFreeSpace > requiredSpace)
-                    {
-                        WriteLog($"Drive {drv.Name[0]} selected.");
-                        return true;
-                    }
-                    else
-                    {
-                        WriteLog($"Drive {drv.Name[0]} does not has enough free space ({FormatGB(drv.AvailableFreeSpace)} GB)");
-                    }
+                    WriteLog($"Drive {drv.Name[0]} selected (Free space = {FormatGB(drv.AvailableFreeSpace)} GB)");
+                    return true;
                 }
                 else
                 {
-                    if (drv.AvailableFreeSpace > requiredSpace)
-                    {
-                        WriteLog($"Drive {drv.Name[0]} selected (Free space = {FormatGB(drv.AvailableFreeSpace)} GB)");
-                        return true;
-                    }
-                    else
-                    {
-                        WriteLog($"Drive {drv.Name[0]} does not has enough free space ({FormatGB(drv.AvailableFreeSpace)} GB)");
-                    }
+                    WriteLog($"Drive {drv.Name[0]} does not has enough free space ({FormatGB(drv.AvailableFreeSpace)} GB)");
                 }
             }
             else
