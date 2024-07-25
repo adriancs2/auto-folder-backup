@@ -85,8 +85,8 @@ namespace System
 
                 if (TotalIncrementBackupSize > 0L)
                 {
-                    // 120% buffer
-                    TotalIncrementBackupBufferSize = (long)(TotalIncrementBackupSize * 1.2);
+                    // 160% buffer
+                    TotalIncrementBackupBufferSize = (long)(TotalIncrementBackupSize * 1.6);
 
                     // Add 1 GB to the buffer
                     TotalIncrementBackupBufferSize += (long)(1024 * 1024 * 1024); // 1 GB in bytes
@@ -102,7 +102,6 @@ namespace System
                      Total Incremental Backup Size     : {FormatGB(TotalIncrementBackupSize)} GB ({TotalIncrementBackupSize})
                      Total Incremental Buffer Size     : {FormatGB(TotalIncrementBackupBufferSize)} GB ({TotalIncrementBackupBufferSize})
                      Total Incremental Backup + Buffer : {FormatGB(TotalIncrementBackupAndBufferSize)} GB ({TotalIncrementBackupAndBufferSize})
-                     Total Achieve Size                : {FormatGB(TotalOldArchiveSize)} GB ({TotalOldArchiveSize})
 ");
 
                 TotalIncrementBackupAndBufferSize = TotalIncrementBackupSize + TotalIncrementBackupBufferSize;
@@ -400,7 +399,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                 if (path.Contains(Path.DirectorySeparatorChar + recycleBinName + Path.DirectorySeparatorChar) ||
                     path.EndsWith(Path.DirectorySeparatorChar + recycleBinName))
                 {
-                    WriteLog($"GetDirectorySize - Skipping folder: {path}");
+                    WriteLog($"Skipping folder: {path}");
                     return true;
                 }
             }
