@@ -43,7 +43,6 @@ namespace System
 
         static long TotalDiskSpace = 0L;
         static long TotalDiskFreeSpace = 0L;
-        static long RemainingFreeSpace = 0L;
 
         static long TotalDiskFreeSpaceAfterBackup = 0L;
 
@@ -116,16 +115,6 @@ namespace System
 
                 TotalDiskSpace = destinationDrive.TotalSize;
                 TotalDiskFreeSpace = destinationDrive.AvailableFreeSpace;
-
-                if (IsFullBackup)
-                {
-                    RemainingFreeSpace = TotalDiskFreeSpace;
-                }
-                else
-                {
-                    // This value has already been collected during GetDestinationFolder() for incremental backup
-                    // RemainingFreeSpace = TotalDiskFreeSpace + TotalOldArchiveSize
-                }
 
                 DateTime timeAfterGettingDestinationFolder = DateTime.Now;
 
@@ -569,7 +558,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                         WriteLog($"Free available space at destination Drive {startDrive.Name[0]} is {FormatGB(startDrive.AvailableFreeSpace)} GB ({startDrive.AvailableFreeSpace})");
 
-                        RemainingFreeSpace = startDrive.AvailableFreeSpace + TotalOldArchiveSize;
+                        long RemainingFreeSpace = startDrive.AvailableFreeSpace + TotalOldArchiveSize;
 
                         WriteLog($"Total estimated available size: {FormatGB(RemainingFreeSpace)} GB ({RemainingFreeSpace}), Old archive size + free sapce");
 
@@ -868,6 +857,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             // The issue arises when the file or folder names contain leading or trailing whitespace.
             // In such cases, the files and folders arrays store the paths as plain strings, including the whitespace.
             // Later, when attempting to copy these files, the system might throws a "file not found" exception.
+            // GetDirectories and GetFiles load everything at once into memory which is highly memory inefficient
 
             // To resolve this problem, it is recommended to use Directory.EnumerateFiles and Directory.EnumerateDirectories instead.
             // These methods return a list of FileInfo and DirectoryInfo objects, respectively, rather than plain string paths.
@@ -908,7 +898,6 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             {
                 try
                 {
-
                     // Construct the destination file path
                     string destFilePath = Path.Combine(destFolderInfo.FullName, sourceFile.Name);
                     FileInfo destFileInfo = new FileInfo(destFilePath);
@@ -917,15 +906,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                     {
                         // Full backup
 
-                        if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(sourceFile))
-                        {
-                            CopyFile(sourceFile, destFileInfo, successWriter, failWriter);
-                        }
-                        else
-                        {
-                            WriteLog($"Program stopped at: {sourceFile.FullName}");
-                            throw new Exception("Not enough disk space. Program terminated.");
-                        }
+                        CopyFile(sourceFile, destFileInfo, successWriter, failWriter);
                     }
                     else
                     {
@@ -933,15 +914,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                         if (FileIsArchive(sourceFile))
                         {
-                            if (CheckEnoughDiskSpaceUpdateAvailableDiskSpace(sourceFile))
-                            {
-                                CopyFile(sourceFile, destFileInfo, successWriter, failWriter);
-                            }
-                            else
-                            {
-                                WriteLog($"Program stopped at: {sourceFile.FullName}");
-                                throw new Exception("Not enough disk space. Program terminated.");
-                            }
+                            CopyFile(sourceFile, destFileInfo, successWriter, failWriter);
                         }
                     }
 
@@ -1013,24 +986,6 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
             // Increment the success counter
             TotalSuccess++;
-        }
-
-        public static bool CheckEnoughDiskSpaceUpdateAvailableDiskSpace(FileInfo fileInfo)
-        {
-            if (IsFullBackup)
-                return true;
-
-            long fileSize = GetFileAllocationSize(fileInfo);
-
-            if (RemainingFreeSpace > fileSize)
-            {
-                RemainingFreeSpace -= fileSize;
-
-                return true;
-            }
-
-            WriteLog($"Remaining free disk space: {FormatGB(RemainingFreeSpace)} GB, Required disk space: {FormatGB(fileSize)} GB");
-            return false;
         }
 
         static DirectoryInfo GenerateDestinationFolder(DirectoryInfo baseDestFolderInfo, DirectoryInfo sourceSubDir)
