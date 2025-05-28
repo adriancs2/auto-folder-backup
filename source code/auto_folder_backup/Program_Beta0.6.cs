@@ -12,7 +12,9 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 
 
-// Version: Beta 0.6
+// Version: Beta 0.61
+
+// Fix a bug where incremental backup always creates new folder, in stead of using the last backup folder
 
 namespace System
 {
@@ -571,7 +573,8 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                             // proceed incremental backup
                             WriteLog($"Drive {startDrive.Name[0]} has enough space for incremental backup");
                             WriteLog("Executing incremental backup");
-                            return (startDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), startDrive, false);
+                            
+                            return (lastDir, startDrive, false);
                         }
                         else
                         {
@@ -580,7 +583,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
                             // switch to next drive and do new full backup
 
                             WriteLog($"Insufficient space at Drive {startDrive.Name[0]} for incremental backup");
-                            WriteLog("Give up incremental backup, switch to next drive and attempt for full backup");
+                            WriteLog("Switching to next drive and attempting full backup");
 
                             (DirectoryInfo dir, DriveInfo drv) = GetFullBackupFolder(startDrive);
 
@@ -773,7 +776,7 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             // check for free space
 
             WriteLog("Preparing for full backup");
-            WriteLog($"Full backup + buffer size: {(FormatGB(TotalFullBackupAndBufferSize))} GB, {TotalFullBackupAndBufferSize}");
+            WriteLog($"Full backup + buffer size: {(FormatGB(TotalFullBackupAndBufferSize))} GB, {TotalFullBackupAndBufferSize} bytes");
 
             var freeDrive = GetDriveWithEnoughSpace(TotalFullBackupAndBufferSize, startDrive, true, false);
 
@@ -799,6 +802,8 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
 
                     WriteLog("Executing full backup");
 
+                    WriteLog($"Selected drive {diskDrive.Name[0]} for full backup, formatted: true");
+
                     return (diskDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), diskDrive);
                 }
             }
@@ -806,9 +811,9 @@ Total Skipped        = {FormatNumber(TotalSkipped)} Files
             {
                 // This drive has enough free space
                 // Create a new folder. Use this folder as destination
-
                 WriteLog("Executing full backup");
-
+                WriteLog($"Drive {freeDrive.Name[0]} has enough free space, a format is not required.");
+                WriteLog($"Selected drive {freeDrive.Name[0]} for full backup, formatted: false");
                 return (freeDrive.RootDirectory.CreateSubdirectory($"{DateTime.Now:yyyy-MM-dd HHmmss}"), freeDrive);
             }
 
